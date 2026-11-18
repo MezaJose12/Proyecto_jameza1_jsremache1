@@ -1,0 +1,39 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: makoto-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: makoto_db
+      POSTGRES_USER: makoto_user
+      POSTGRES_PASSWORD: makoto_pass_2026
+    ports:
+      - "5432:5432"
+    volumes:
+      - makoto_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U makoto_user -d makoto_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend/Makoto.Api
+      dockerfile: Dockerfile
+    container_name: makoto-backend-api
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=makoto_db;Username=makoto_user;Password=makoto_pass_2026
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./datos/audios:/app/datos/audios
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  makoto_pgdata:

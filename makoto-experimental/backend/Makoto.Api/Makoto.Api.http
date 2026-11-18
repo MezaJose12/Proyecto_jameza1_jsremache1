@@ -1,0 +1,6 @@
+@Makoto.Api_HostAddress = http://localhost:5149
+
+GET {{Makoto.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

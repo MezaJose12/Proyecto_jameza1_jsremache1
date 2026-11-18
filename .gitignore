@@ -1,0 +1,16 @@
+# .NET
+bin/
+obj/
+publish/
+
+# Node / React PWA
+node_modules/
+dist/
+.vite/
+
+# Audios pesados y entornos
+datos/audios/*.wav
+datos/audios/*.mp3
+.env
+.vs/
+.vscode/
