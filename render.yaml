@@ -1,0 +1,30 @@
+services:
+  # 1. Backend ASP.NET Core 9.0 conectado a Neon
+  - type: web
+    name: makoto-api
+    runtime: docker
+    plan: free
+    region: ohio
+    dockerfilePath: ./backend/Makoto.Api/Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/health
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: DATABASE_URL
+        sync: false # Render te pedirá pegar aquí la URL de Neon al crear el Blueprint
+
+  # 2. Frontend React PWA (Static Site gratuito, 0 horas de cómputo)
+  - type: web
+    name: makoto-pwa
+    runtime: static
+    plan: free
+    rootDir: frontend/makoto-pwa
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: makoto-api
+          property: url
