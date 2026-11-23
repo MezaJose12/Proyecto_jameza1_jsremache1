@@ -20,7 +20,7 @@ services:
   backend:
     build:
       context: ./backend/Makoto.Api
-      dockerfile: Dockerfile
+      dockerfile: backend/Makoto.Api/Dockerfile
     container_name: makoto-backend-api
     restart: unless-stopped
     environment:

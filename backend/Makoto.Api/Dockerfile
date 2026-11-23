@@ -1,29 +1,25 @@
-# Consulte https://aka.ms/customizecontainer para aprender a personalizar su contenedor de depuración y cómo Visual Studio usa este Dockerfile para compilar sus imágenes para una depuración más rápida.
-
-# Esta fase se usa cuando se ejecuta desde VS en modo rápido (valor predeterminado para la configuración de depuración)
-FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
-USER $APP_UID
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
 WORKDIR /app
 EXPOSE 8080
 
-
-# Esta fase se usa para compilar el proyecto de servicio
-FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["Makoto.Api.csproj","."]
-RUN dotnet restore "./Makoto.Api.csproj"
-COPY . .
-WORKDIR "/src/."
-RUN dotnet build "./Makoto.Api.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
-# Esta fase se usa para publicar el proyecto de servicio que se copiará en la fase final.
-FROM build AS publish
-ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "./Makoto.Api.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+# Copiar el .csproj desde su ruta real respecto a la raíz del repositorio
+COPY ["backend/Makoto.Api/Makoto.Api.csproj", "backend/Makoto.Api/"]
+RUN dotnet restore "backend/Makoto.Api/Makoto.Api.csproj"
 
-# Esta fase se usa en producción o cuando se ejecuta desde VS en modo normal (valor predeterminado cuando no se usa la configuración de depuración)
+# Copiar el código fuente del backend y publicar
+COPY ["backend/Makoto.Api/", "backend/Makoto.Api/"]
+WORKDIR "/src/backend/Makoto.Api"
+RUN dotnet publish "Makoto.Api.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+
 FROM base AS final
 WORKDIR /app
-COPY --from=publish /app/publish .
+COPY --from=build /app/publish .
+
+# Copiar la carpeta de audios desde la raíz hacia /app/datos/audios
+COPY ["datos/audios", "/app/datos/audios"]
+
 ENTRYPOINT ["dotnet", "Makoto.Api.dll"]
